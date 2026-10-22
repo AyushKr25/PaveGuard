@@ -10,13 +10,33 @@ env:
   REGISTRY: docker.io
   IMAGE_NAME: ayushkumar143/smartpothole-ai-service
 
-# Jobs skip cleanly when the required repository secrets are not configured
-# (Settings -> Secrets and variables -> Actions). Add the secrets to enable
-# the real build & deploy pipeline.
+# The secrets context cannot be used directly in job-level `if:`, so a probe
+# job exports which repository secrets are configured. Build/deploy jobs then
+# skip cleanly (no red X) until the secrets are added under
+# Settings -> Secrets and variables -> Actions.
 jobs:
+  check-secrets:
+    runs-on: ubuntu-latest
+    outputs:
+      has_docker: ${{ steps.check.outputs.has_docker }}
+      has_vercel: ${{ steps.check.outputs.has_vercel }}
+      has_railway: ${{ steps.check.outputs.has_railway }}
+    steps:
+      - name: Check for configured secrets
+        id: check
+        env:
+          HAS_DOCKER: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+          HAS_VERCEL: ${{ secrets.VERCEL_TOKEN != '' }}
+          HAS_RAILWAY: ${{ secrets.RAILWAY_TOKEN != '' }}
+        run: |
+          echo "has_docker=$HAS_DOCKER" >> "$GITHUB_OUTPUT"
+          echo "has_vercel=$HAS_VERCEL" >> "$GITHUB_OUTPUT"
+          echo "has_railway=$HAS_RAILWAY" >> "$GITHUB_OUTPUT"
+
   build-and-push-ai-service:
     runs-on: ubuntu-latest
-    if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+    needs: check-secrets
+    if: needs.check-secrets.outputs.has_docker == 'true'
     permissions:
       contents: read
       packages: write
@@ -59,8 +79,8 @@ jobs:
 
   deploy-frontend:
     runs-on: ubuntu-latest
-    needs: build-and-push-ai-service
-    if: ${{ github.ref == 'refs/heads/main' && secrets.VERCEL_TOKEN != '' }}
+    needs: [check-secrets, build-and-push-ai-service]
+    if: ${{ needs.check-secrets.outputs.has_vercel == 'true' && github.ref == 'refs/heads/main' }}
     defaults:
       run:
         working-directory: ./frontend
@@ -82,8 +102,8 @@ jobs:
 
   deploy-ai-service:
     runs-on: ubuntu-latest
-    needs: build-and-push-ai-service
-    if: ${{ github.ref == 'refs/heads/main' && secrets.RAILWAY_TOKEN != '' }}
+    needs: [check-secrets, build-and-push-ai-service]
+    if: ${{ needs.check-secrets.outputs.has_railway == 'true' && github.ref == 'refs/heads/main' }}
     steps:
       - name: Deploy to Railway
         uses: railwayapp/railway-deploy@v1
