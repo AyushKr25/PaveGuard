@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  # Frontend - Next.js Application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY}
+      - NEXT_PUBLIC_AI_API_URL=http://ai-service:8000
+      - NEXT_PUBLIC_MAP_TILE_URL=${NEXT_PUBLIC_MAP_TILE_URL}
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+      - NEXT_PUBLIC_ENABLE_DEMO_MODE=${NEXT_PUBLIC_ENABLE_DEMO_MODE:-false}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - ai-service
+    networks:
+      - smartpothole-network
+    profiles:
+      - dev
+
+  # AI Service - FastAPI with YOLO
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "8000:8000"
+    environment:
+      - AI_MODEL_PROVIDER=${AI_MODEL_PROVIDER:-ultralytics}
+      - AI_MODEL_PATH=${AI_MODEL_PATH:-/app/models/best.pt}
+      - AI_MODEL_TYPE=${AI_MODEL_TYPE:-segmentation}
+      - AI_MODEL_VERSION=${AI_MODEL_VERSION:-v1.0.0}
+      - AI_CONFIDENCE_THRESHOLD=${AI_CONFIDENCE_THRESHOLD:-0.25}
+      - AI_IOU_THRESHOLD=${AI_IOU_THRESHOLD:-0.45}
+      - AI_IMAGE_SIZE=${AI_IMAGE_SIZE:-640}
+      - AI_DEVICE=${AI_DEVICE:-auto}
+      - AI_HALF_PRECISION=${AI_HALF_PRECISION:-true}
+      - ENABLE_SEGMENTATION=${ENABLE_SEGMENTATION:-true}
+      - ENABLE_TRACKING=${ENABLE_TRACKING:-true}
+      - ENABLE_DEPTH=${ENABLE_DEPTH:-false}
+      - ENABLE_DEMO_MODE=${ENABLE_DEMO_MODE:-false}
+      - TRACK_MIN_DETECTION_FRAMES=${TRACK_MIN_DETECTION_FRAMES:-3}
+      - TRACK_TIMEOUT=${TRACK_TIMEOUT:-30}
+      - TRACK_DEDUPLICATION_DISTANCE=${TRACK_DEDUPLICATION_DISTANCE:-50}
+      - TRACK_MIN_CONFIDENCE=${TRACK_MIN_CONFIDENCE:-0.3}
+      - SEVERITY_CONFIG_PATH=${SEVERITY_CONFIG_PATH:-/app/config/severity_config.yaml}
+      - AI_CORS_ORIGINS=${AI_CORS_ORIGINS:-http://localhost:3000}
+      - AI_LOG_LEVEL=${AI_LOG_LEVEL:-debug}
+      - AI_MAX_UPLOAD_SIZE=${AI_MAX_UPLOAD_SIZE:-104857600}
+      - AI_REQUEST_TIMEOUT=${AI_REQUEST_TIMEOUT:-300}
+      - AI_SERVICE_SECRET=${AI_SERVICE_SECRET}
+    volumes:
+      - ./ai-service:/app
+      - ./ai-service/models:/app/models
+      - ./ai-service/config:/app/config
+      - ./ai-service/temp:/app/temp
+      - ./ai-service/uploads:/app/uploads
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - smartpothole-network
+    profiles:
+      - dev
+      - ai-only
+
+  # Optional: Redis for job queue (future use)
+  # redis:
+  #   image: redis:7-alpine
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis-data:/data
+  #   networks:
+  #     - smartpothole-network
+  #   profiles:
+  #     - dev
+
+networks:
+  smartpothole-network:
+    driver: bridge
+
+# volumes:
+#   redis-data:

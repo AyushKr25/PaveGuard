@@ -1,0 +1,47 @@
+project_id = "your-project-id"
+api_port = 54321
+db_port = 54322
+studio_port = 54323
+inbucket_port = 54324
+jwt_secret = "your-jwt-secret-min-32-chars"
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/**"]
+jwt_expiry = 3600
+refresh_token_rotation_enabled = true
+reauthentication_interval = "24h"
+
+[auth.email]
+enabled = true
+double_confirm_changes = true
+secure_email_change_enabled = true
+
+[auth.sms]
+enabled = false
+
+[auth.external]
+enabled = false
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[storage.buckets]
+detection-images = { public = false, file_size_limit = "10MiB", allowed_mime_types = ["image/jpeg", "image/png", "image/webp"] }
+detection-videos = { public = false, file_size_limit = "500MiB", allowed_mime_types = ["video/mp4", "video/webm", "video/quicktime"] }
+annotated-results = { public = false, file_size_limit = "50MiB", allowed_mime_types = ["image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm"] }
+avatars = { public = true, file_size_limit = "5MiB", allowed_mime_types = ["image/jpeg", "image/png", "image/webp"] }
+reports = { public = false, file_size_limit = "20MiB", allowed_mime_types = ["application/pdf", "text/csv", "application/json"] }
+
+[realtime]
+enabled = true
+max_connections = 100
+
+[db]
+major_version = 15
+extensions = ["uuid-ossp", "pgcrypto", "postgis", "pg_trgm"]
+
+[functions]
+enabled = false

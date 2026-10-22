@@ -1,0 +1,106 @@
+# SmartPothole AI - Severity Estimation Configuration
+# 
+# This configuration defines the weights and thresholds for AI-based pothole severity estimation.
+# 
+# IMPORTANT: These coefficients are heuristic and should be validated against ground truth data.
+# They are NOT scientifically validated engineering measurements.
+#
+# Severity is an AI-assisted visual estimate and should not be treated as a certified engineering measurement.
+
+version: 1
+description: "Pothole severity estimation weights and thresholds"
+
+# Feature weights for severity scoring. Two sets are used depending on the
+# evidence available for a single detection:
+#
+# weights_seg       - when the model produces a segmentation mask
+# weights_bbox_only - bbox-only detections (YOLO detect models). Calibrated
+#                     against the pothole validation split (286 boxes) so the
+#                     severity tracks visual size + camera proximity:
+#                     typical distribution LOW ~50%, MODERATE ~32%, HIGH ~16%,
+#                     CRITICAL ~1-4%. See ml/TRAINING_RESULTS.md.
+#
+# Each set sums to 1.0 over its own features; when temporal evidence is
+# missing (single images), the remaining weights are renormalized.
+weights_seg:
+  segmentation_area: 0.30
+  bbox_area: 0.20
+  proximity: 0.10
+  aspect_ratio: 0.10
+  shape_irregularity: 0.10
+  confidence: 0.10
+  temporal_persistence: 0.10
+
+weights_bbox_only:
+  # Bounding box area relative to image, scaled by area_full_scale
+  bbox_area: 0.45
+  # Vertical position of the box center: bottom of frame = close to camera
+  proximity: 0.20
+  # Detection confidence (0-1)
+  confidence: 0.15
+  # Aspect ratio irregularity (0-1, higher = more elongated)
+  aspect_ratio: 0.10
+  # Temporal persistence across frames (live/video only, 0 for single images)
+  temporal_persistence: 0.10
+
+# Severity level thresholds (0-1 scale), calibrated with weights_bbox_only
+thresholds:
+  LOW: 0.00
+  MODERATE: 0.30
+  HIGH: 0.55
+  CRITICAL: 0.80
+
+# Confidence thresholds for severity assignment
+severity_confidence:
+  min_frames_for_high_confidence: 5
+  confidence_boost_per_frame: 0.05
+  max_confidence: 0.95
+
+# Visual feature extraction parameters
+feature_extraction:
+  # Minimum contour area for shape analysis (pixels)
+  min_contour_area: 100
+
+  # Contour approximation epsilon factor
+  contour_epsilon_factor: 0.02
+
+  # Minimum segmentation area ratio to consider
+  min_segmentation_ratio: 0.001
+
+  # Maximum segmentation area ratio (full image)
+  max_segmentation_ratio: 0.5
+
+  # Fraction of image area that maps to a bbox-area feature value of 1.0
+  # (~20% frame coverage is an extreme close-up pothole in this dataset:
+  #  measured p90 = 17%, max = 72%)
+  area_full_scale: 0.20
+
+  # Same scale for segmentation masks (masks are tighter than boxes)
+  seg_area_full_scale: 0.35
+
+# Temporal aggregation
+temporal:
+  # Frames to consider for temporal smoothing
+  smoothing_window: 5
+  
+  # Weight for latest frame vs historical (0-1)
+  latest_weight: 0.6
+  
+  # Minimum frames before assigning HIGH/CRITICAL
+  min_frames_for_severe: 3
+
+# Depth estimation (optional)
+depth:
+  enabled: false
+  model_path: ""
+  # Calibration parameters (if available)
+  focal_length_px: null
+  sensor_width_mm: null
+  baseline_m: null
+
+# Demo mode overrides (when ENABLE_DEMO_MODE=true)
+demo_mode:
+  enabled: false
+  fixed_severity: "MODERATE"
+  fixed_score: 0.5
+  add_random_variance: 0.1

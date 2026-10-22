@@ -1,0 +1,35 @@
+{
+  "name": "smartpothole-ai",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "ai-service"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:ai\"",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:ai": "npm run dev --workspace=ai-service",
+    "build": "npm run build --workspaces",
+    "build:frontend": "npm run build --workspace=frontend",
+    "build:ai": "npm run build --workspace=ai-service",
+    "lint": "npm run lint --workspaces",
+    "test": "npm run test --workspaces",
+    "db:migrate": "supabase db push",
+    "db:reset": "supabase db reset",
+    "db:generate-types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > frontend/src/types/database.ts",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:build": "docker-compose build",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "husky": "^9.0.11",
+    "prettier": "^3.2.5"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "packageManager": "npm@10.5.0"
+}

@@ -1,0 +1,252 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 60 10% 97%;
+    --foreground: 160 10% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 160 10% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 10% 12%;
+    --primary: 100 32% 34%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 80 8% 92%;
+    --secondary-foreground: 160 10% 14%;
+    --muted: 60 8% 94%;
+    --muted-foreground: 100 6% 44%;
+    --accent: 80 12% 92%;
+    --accent-foreground: 160 10% 14%;
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 60 8% 88%;
+    --input: 60 8% 88%;
+    --ring: 100 32% 38%;
+    --radius: 1rem;
+
+    /* Airaa clean shadow system */
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.04);
+    --shadow-card-hover: 0 2px 8px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.06);
+    --shadow-dialog: 0 4px 24px rgba(0, 0, 0, 0.08), 0 16px 48px rgba(0, 0, 0, 0.06);
+    --shadow-dropdown: 0 2px 12px rgba(0, 0, 0, 0.06), 0 8px 32px rgba(0, 0, 0, 0.06);
+    --shadow-tab-bar: 0 -1px 4px rgba(0, 0, 0, 0.04), 0 0 24px rgba(0, 0, 0, 0.04);
+
+    /* Legacy glass variables (kept for backward compat, now simplified) */
+    --lg-tint: 255 255 255;
+    --lg-tint-alpha: 0.92;
+    --lg-blur: 0px;
+    --lg-saturate: 100%;
+    --lg-edge: rgba(0, 0, 0, 0.06);
+    --lg-edge-strong: rgba(0, 0, 0, 0.08);
+    --lg-shadow: var(--shadow-card);
+    --lg-shadow-hover: var(--shadow-card-hover);
+  }
+
+  .dark {
+    --background: 150 8% 7%;
+    --foreground: 60 10% 96%;
+    --card: 150 6% 12%;
+    --card-foreground: 60 10% 96%;
+    --popover: 150 6% 10%;
+    --popover-foreground: 60 10% 96%;
+    --primary: 100 40% 48%;
+    --primary-foreground: 150 10% 5%;
+    --secondary: 150 8% 18%;
+    --secondary-foreground: 60 10% 96%;
+    --muted: 150 8% 16%;
+    --muted-foreground: 100 6% 58%;
+    --accent: 150 8% 20%;
+    --accent-foreground: 60 10% 96%;
+    --destructive: 0 70% 52%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 150 8% 22%;
+    --input: 150 8% 22%;
+    --ring: 100 40% 52%;
+
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.16);
+    --shadow-card-hover: 0 2px 8px rgba(0, 0, 0, 0.24), 0 8px 24px rgba(0, 0, 0, 0.2);
+    --shadow-dialog: 0 4px 24px rgba(0, 0, 0, 0.3), 0 16px 48px rgba(0, 0, 0, 0.24);
+    --shadow-dropdown: 0 2px 12px rgba(0, 0, 0, 0.24), 0 8px 32px rgba(0, 0, 0, 0.2);
+
+    --lg-tint: 30 36 32;
+    --lg-tint-alpha: 0.9;
+    --lg-edge: rgba(255, 255, 255, 0.08);
+    --lg-edge-strong: rgba(255, 255, 255, 0.12);
+    --lg-shadow: var(--shadow-card);
+    --lg-shadow-hover: var(--shadow-card-hover);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    background-color: hsl(var(--background));
+    min-height: 100vh;
+  }
+  h1, h2, h3, h4 {
+    letter-spacing: -0.022em;
+  }
+}
+
+@layer components {
+  /*
+   * Airaa Design System — Clean solid surfaces
+   * Replaces heavy glassmorphism with clean card-style backgrounds
+   */
+  .glass {
+    position: relative;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-card);
+  }
+
+  .glass-strong {
+    position: relative;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Cursor-following sheen — subtler for Airaa aesthetic */
+  .glass-sheen::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    background: radial-gradient(
+      280px circle at var(--mx, 50%) var(--my, 0%),
+      rgba(75, 122, 62, 0.04),
+      transparent 65%
+    );
+  }
+  .glass-sheen:hover::before {
+    opacity: 1;
+  }
+
+  /* Hover: clean lift with shadow deepening */
+  .glass-hover {
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.3s ease;
+  }
+  .glass-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card-hover);
+    border-color: hsl(var(--primary) / 0.15);
+  }
+
+  /* Press effect */
+  .glass-press {
+    transition: transform 0.12s ease;
+  }
+  .glass-press:active {
+    transform: scale(0.97);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  /*
+   * DO NOT define `.animate-in` / `.animate-out` here. Those class names belong
+   * to the tailwindcss-animate plugin and are used by every Radix overlay
+   * (dropdowns, selects, dialogs, toasts) for their open/close animations.
+   * Overriding them with plain `animation: fade-in/fade-out` breaks the
+   * exit animation (missing keyframes => no animationend => Radix never
+   * unmounts the overlay => body stays pointer-events:none and the page
+   * appears frozen).
+   */
+}
+
+/* Radix floating layers */
+[data-radix-popper-content-wrapper] > * {
+  background: hsl(var(--card)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: var(--shadow-dropdown) !important;
+}
+
+/* Leaflet map */
+.leaflet-container {
+  @apply rounded-xl;
+  font-family: inherit;
+  background-color: hsl(var(--background));
+}
+
+.leaflet-popup-content-wrapper {
+  background: hsl(var(--card)) !important;
+  border: 1px solid hsl(var(--border));
+  box-shadow: var(--shadow-dropdown);
+  color: hsl(var(--foreground));
+  border-radius: 16px !important;
+}
+
+.leaflet-popup-tip {
+  background: hsl(var(--card)) !important;
+}
+
+.leaflet-popup-content {
+  @apply p-2 m-0;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.2);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.35);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* Focus ring — Airaa style: soft, green-tinted */
+:focus-visible {
+  @apply outline-none ring-2 ring-ring/50 ring-offset-2 ring-offset-background;
+}
+
+::selection {
+  background: hsl(var(--primary) / 0.14);
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

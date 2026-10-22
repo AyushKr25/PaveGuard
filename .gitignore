@@ -1,0 +1,104 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+
+# Next.js
+.next/
+out/
+build/
+
+# Production
+dist/
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+
+# Supabase
+.supabase/
+
+# AI Service
+ai-service/__pycache__/
+ai-service/.pytest_cache/
+ai-service/*.pyc
+ai-service/venv/
+ai-service/.env
+ai-service/models/
+ai-service/uploads/
+ai-service/temp/
+
+# Python bytecode (any depth)
+__pycache__/
+*.pyc
+
+# AI agent worktrees/state
+.kilo/
+.kilocode/
+
+# Model weights (large files)
+*.pt
+*.onnx
+*.engine
+models/
+weights/
+
+# Datasets
+datasets/
+data/
+
+# Logs
+logs/
+*.log
+
+# Docker
+.docker/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# ML training outputs
+ml/runs/
+ml/exports/
+ml/training/*.pt
+# ML artifacts (datasets are re-downloadable; weights are large binaries)
+ml/datasets/raw/
+ml/datasets/pothole/
+ml/training/runs/
+*.pt
+ai-service/uvicorn-out.log
+ai-service/uvicorn-err.log
+frontend/next-dev.log

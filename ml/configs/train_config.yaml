@@ -1,0 +1,93 @@
+# SmartPothole AI - Model Training Configuration
+
+# Training hyperparameters
+train:
+  # Model
+  model: "yolo11n-seg.pt"  # or yolo11s-seg.pt, yolo11m-seg.pt
+  task: "segment"  # detect, segment, classify, pose
+  
+  # Data
+  data: "ml/datasets/dataset.yaml"
+  epochs: 100
+  batch: 16
+  imgsz: 640
+  device: "auto"  # cuda, mps, cpu, auto
+  workers: 8
+  
+  # Optimization
+  optimizer: "auto"  # SGD, Adam, AdamW, auto
+  lr0: 0.01        # Initial learning rate
+  lrf: 0.01        # Final learning rate factor
+  momentum: 0.937  # SGD momentum
+  weight_decay: 0.0005
+  warmup_epochs: 3
+  warmup_momentum: 0.8
+  warmup_bias_lr: 0.1
+  
+  # Loss
+  box: 7.5         # Box loss gain
+  cls: 0.5         # Class loss gain
+  dfl: 1.5         # DFL loss gain
+  pose: 12.0       # Pose loss gain
+  kobj: 1.0        # Keypoint obj loss gain
+  label_smoothing: 0.0
+  nbs: 64          # Nominal batch size
+  
+  # Augmentation
+  hsv_h: 0.015
+  hsv_s: 0.7
+  hsv_v: 0.4
+  degrees: 10.0
+  translate: 0.1
+  scale: 0.5
+  shear: 2.0
+  perspective: 0.0
+  flipud: 0.0
+  fliplr: 0.5
+  mosaic: 1.0
+  mixup: 0.1
+  copy_paste: 0.1
+  
+  # Training control
+  patience: 20       # Early stopping patience
+  save: true         # Save checkpoints
+  save_period: -1    # Save every N epochs (-1 = only best)
+  val: true          # Validate during training
+  plots: true        # Generate plots
+  resume: false      # Resume from last checkpoint
+  deterministic: true
+  single_cls: false  # Train as single class
+  rect: false        # Rectangular training
+  cos_lr: false      # Cosine LR scheduler
+  close_mosaic: 10   # Disable mosaic for last N epochs
+  amp: true          # Automatic Mixed Precision
+  fraction: 1.0      # Dataset fraction to use
+  profile: false     # Profile speed
+  freeze: null       # Freeze first N layers
+  
+  # Logging
+  project: "ml/training/runs"
+  name: "pothole-seg"
+  exist_ok: false
+
+# Validation
+val:
+  conf: 0.25
+  iou: 0.45
+  max_det: 300
+  half: true
+  dnn: false
+  plots: true
+
+# Export
+export:
+  format: "onnx"  # onnx, torchscript, openvino, engine, coreml, tflite, pb
+  imgsz: 640
+  half: true
+  int8: false
+  dynamic: false
+  simplify: true
+  opset: 12
+  workspace: 4
+  nms: false
+  batch: 1
