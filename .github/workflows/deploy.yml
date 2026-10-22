@@ -10,9 +10,13 @@ env:
   REGISTRY: docker.io
   IMAGE_NAME: ayushkumar143/smartpothole-ai-service
 
+# Jobs skip cleanly when the required repository secrets are not configured
+# (Settings -> Secrets and variables -> Actions). Add the secrets to enable
+# the real build & deploy pipeline.
 jobs:
   build-and-push-ai-service:
     runs-on: ubuntu-latest
+    if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
     permissions:
       contents: read
       packages: write
@@ -56,7 +60,10 @@ jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
     needs: build-and-push-ai-service
-    if: github.ref == 'refs/heads/main'
+    if: ${{ github.ref == 'refs/heads/main' && secrets.VERCEL_TOKEN != '' }}
+    defaults:
+      run:
+        working-directory: ./frontend
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -72,12 +79,11 @@ jobs:
 
       - name: Deploy to Vercel
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
-        working-directory: ./frontend
 
   deploy-ai-service:
     runs-on: ubuntu-latest
     needs: build-and-push-ai-service
-    if: github.ref == 'refs/heads/main'
+    if: ${{ github.ref == 'refs/heads/main' && secrets.RAILWAY_TOKEN != '' }}
     steps:
       - name: Deploy to Railway
         uses: railwayapp/railway-deploy@v1
