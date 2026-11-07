@@ -24,7 +24,7 @@ import {
   CheckCircle,
   X,
 } from 'lucide-react';
-import { getDetectionsNear, getCurrentUser } from '@/lib/supabase';
+import { getDetectionsNear, getDetections, getCurrentUser } from '@/lib/supabase';
 import { cn, getSeverityColor, formatRelativeTime } from '@/lib/utils';
 import type { SeverityLevel, DetectionRecord } from '@/types';
 import { AppShell } from '@/components/app-shell';
@@ -121,8 +121,8 @@ export default function MapPage() {
         updateMapMarkers(detectionsRef.current);
       });
 
-      // Load initial markers
-      loadMarkersRef.current(mapCenter[0], mapCenter[1]);
+      // Load initial markers (isInitial lets the fallback center on data)
+      loadMarkersRef.current(mapCenter[0], mapCenter[1], true);
 
       // Get user location
       if (navigator.geolocation) {
@@ -149,7 +149,7 @@ export default function MapPage() {
     };
   }, []);
 
-  const loadMarkers = async (lat: number, lng: number) => {
+  const loadMarkers = async (lat: number, lng: number, isInitial = false) => {
     if (isLoadingRef.current) return;
     isLoadingRef.current = true;
     setIsLoading(true);
@@ -167,8 +167,61 @@ export default function MapPage() {
         setMarkers(detectionsRef.current);
         updateMapMarkers(detectionsRef.current);
       }
-    } catch (error) {
-      console.error('Failed to load markers:', error);
+    } catch (rpcError) {
+      // The get_detections_near RPC can be missing/broken on older databases
+      // (e.g. ambiguous-column SQL error). Fall back to a plain RLS-scoped
+      // table query and apply the radius client-side so the map still works.
+      console.warn('get_detections_near unavailable, using table fallback:', rpcError);
+      try {
+        const { data, error: fallbackError } = await getDetections({ limit: 500 });
+        if (fallbackError) throw fallbackError;
+
+        const located = (data as (DetectionRecord & { latitude: number | null; longitude: number | null })[])
+          .filter(d => d.latitude != null && d.longitude != null);
+
+        // On the very first load the map sits at the default world view and
+        // geolocation may be denied; center on the detections instead so the
+        // user's data is actually visible.
+        let filterLat = lat;
+        let filterLng = lng;
+        if (isInitial && located.length > 0 && mapInstanceRef.current) {
+          const cLat = located.reduce((s, d) => s + d.latitude!, 0) / located.length;
+          const cLng = located.reduce((s, d) => s + d.longitude!, 0) / located.length;
+          const hasGeoConsent = await new Promise<boolean>((resolve) => {
+            if (!navigator.geolocation) return resolve(false);
+            navigator.geolocation.getCurrentPosition(() => resolve(true), () => resolve(false), { timeout: 4000 });
+          });
+          if (!hasGeoConsent) {
+            mapInstanceRef.current.setView([cLat, cLng], 13);
+            // The moveend reload is skipped while this call is in flight, so
+            // filter around the new center instead of the old one.
+            filterLat = cLat;
+            filterLng = cLng;
+          }
+        }
+
+        // Radius filter (haversine), matching the RPC's semantics
+        const radius = filtersRef.current.radius;
+        const toRad = (v: number) => (v * Math.PI) / 180;
+        const distanceMeters = (aLat: number, aLng: number) => {
+          const dLat = toRad(aLat - filterLat);
+          const dLng = toRad(aLng - filterLng);
+          const a =
+            Math.sin(dLat / 2) ** 2 +
+            Math.cos(toRad(filterLat)) * Math.cos(toRad(aLat)) * Math.sin(dLng / 2) ** 2;
+          return 2 * 6371000 * Math.asin(Math.sqrt(a));
+        };
+        let fallback = located.filter(d => distanceMeters(d.latitude!, d.longitude!) <= radius);
+
+        if (filtersRef.current.severity.length > 0) {
+          fallback = fallback.filter(d => filtersRef.current.severity.includes(d.severity_level as SeverityLevel));
+        }
+        detectionsRef.current = fallback as unknown as DetectionRecord[];
+        setMarkers(detectionsRef.current);
+        updateMapMarkers(detectionsRef.current);
+      } catch (fallbackError) {
+        console.error('Failed to load markers:', fallbackError);
+      }
     } finally {
       isLoadingRef.current = false;
       setIsLoading(false);

@@ -128,9 +128,9 @@ BEGIN
         dm.thumbnail_path
     FROM public.detections d
     LEFT JOIN LATERAL (
-        SELECT thumbnail_path
-        FROM public.detection_media
-        WHERE detection_id = d.id AND media_type = 'thumbnail'
+        SELECT m.thumbnail_path
+        FROM public.detection_media m
+        WHERE m.detection_id = d.id AND m.media_type = 'thumbnail'
         LIMIT 1
     ) dm ON TRUE
     WHERE d.latitude IS NOT NULL

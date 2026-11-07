@@ -549,7 +549,11 @@ export default function LiveDetectionPage() {
       (container as HTMLElement).requestFullscreen?.();
       setFullscreen(true);
     } else {
-      document.exitFullscreen?.();
+      // Only exit if the document is actually fullscreen, otherwise the
+      // browser throws "TypeError: Failed to execute 'exitFullscreen'"
+      if (document.fullscreenElement) {
+        document.exitFullscreen?.().catch(() => {});
+      }
       setFullscreen(false);
     }
   }, [fullscreen]);
