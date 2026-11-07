@@ -28,7 +28,7 @@ def parse_args():
     ap.add_argument("--imgsz", type=int, default=640)
     ap.add_argument("--workers", type=int, default=12)
     ap.add_argument("--patience", type=int, default=15)
-    ap.add_argument("--save-period", type=int, default=5)
+    ap.add_argument("--save-period", type=int, default=2)
     ap.add_argument("--project", default="ml/training/runs")
     ap.add_argument("--name", default="pothole-detect-v2-xlarge")
     ap.add_argument("--cache", default="disk")
@@ -50,7 +50,10 @@ def norm_cache(v):
 def main():
     args = parse_args()
     cache = norm_cache(args.cache)
-    run_dir = Path(args.project) / args.name
+    # Ultralytics 8.4 joins relative project paths onto runs/detect/ - always
+    # pass an absolute project dir so save_dir is exactly what we expect.
+    project_abs = (Path.cwd() / args.project).resolve()
+    run_dir = project_abs / args.name
     last_pt = run_dir / "weights" / "last.pt"
     best_pt = run_dir / "weights" / "best.pt"
 
@@ -77,7 +80,7 @@ def main():
                     cache=cache,
                     patience=args.patience,
                     save_period=args.save_period,
-                    project=args.project,
+                    project=str(project_abs),
                     name=args.name,
                     seed=0,
                     cos_lr=True,
