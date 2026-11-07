@@ -97,7 +97,9 @@ ml/training/*.pt
 # ML artifacts (datasets are re-downloadable; weights are large binaries)
 ml/datasets/raw/
 ml/datasets/pothole/
+ml/datasets/pothole-expanded/
 ml/training/runs/
+runs/
 *.pt
 ai-service/uvicorn-out.log
 ai-service/uvicorn-err.log
