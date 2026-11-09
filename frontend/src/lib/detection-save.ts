@@ -156,7 +156,7 @@ export async function getDetectionDefaults(): Promise<DetectionDefaults> {
     return {
       inference_mode: (data.inference_mode as 'auto' | 'browser' | 'cloud') || 'auto',
       inference_fps: data.inference_fps ?? 5,
-      confidence_threshold: Number(data.confidence_threshold ?? 0.25),
+      confidence_threshold: Number(data.confidence_threshold ?? 0.2),
       enable_gps: data.enable_gps ?? true,
       auto_save_detections: data.auto_save_detections ?? false,
     };

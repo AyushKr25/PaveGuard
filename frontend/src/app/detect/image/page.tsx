@@ -41,7 +41,7 @@ export default function ImageDetectionPage() {
   const [result, setResult] = React.useState<AIResponse | null>(null);
   const [isProcessing, setIsProcessing] = React.useState(false);
   const [progress, setProgress] = React.useState(0);
-  const [confidenceThreshold, setConfidenceThreshold] = React.useState(0.25);
+  const [confidenceThreshold, setConfidenceThreshold] = React.useState(0.2);
   const [iouThreshold, setIouThreshold] = React.useState(0.45);
   const [returnAnnotated, setReturnAnnotated] = React.useState(true);
   const [saveToDb, setSaveToDb] = React.useState(false);

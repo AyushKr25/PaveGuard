@@ -30,7 +30,7 @@ export default function SettingsPage() {
     theme: 'system',
     inference_mode: 'auto',
     inference_fps: 5,
-    confidence_threshold: 0.25,
+    confidence_threshold: 0.2,
     enable_gps: true,
     auto_save_detections: false,
   });
@@ -53,7 +53,7 @@ export default function SettingsPage() {
             theme: preferences.theme || 'system',
             inference_mode: preferences.inference_mode || 'auto',
             inference_fps: preferences.inference_fps ?? 5,
-            confidence_threshold: Number(preferences.confidence_threshold ?? 0.25),
+            confidence_threshold: Number(preferences.confidence_threshold ?? 0.2),
             enable_gps: preferences.enable_gps ?? true,
             auto_save_detections: preferences.auto_save_detections ?? false,
           });
@@ -189,7 +189,7 @@ export default function SettingsPage() {
                 <Select value={String(prefs.confidence_threshold)} onValueChange={(v) => setPrefs((p) => ({ ...p, confidence_threshold: Number(v) }))}>
                   <SelectTrigger aria-label="Confidence threshold"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {[0.1, 0.25, 0.4, 0.5, 0.7].map((n) => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
+                    {[0.1, 0.15, 0.2, 0.25, 0.3].map((n) => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>

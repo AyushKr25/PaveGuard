@@ -69,7 +69,7 @@ export default function LiveDetectionPage() {
   const [cameraPermission, setCameraPermission] = useState<'prompt' | 'granted' | 'denied' | 'unavailable'>('prompt');
   const [inferenceMode, setInferenceMode] = useState<'auto' | 'browser' | 'cloud'>('cloud');
   const [inferenceFps, setInferenceFps] = useState(5);
-  const [confidenceThreshold, setConfidenceThreshold] = useState(0.25);
+  const [confidenceThreshold, setConfidenceThreshold] = useState(0.2);
   const [iouThreshold, setIouThreshold] = useState(0.45);
   const [detections, setDetections] = useState<Detection[]>([]);
   const [stats, setStats] = useState({
