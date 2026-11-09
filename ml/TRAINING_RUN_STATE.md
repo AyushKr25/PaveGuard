@@ -25,6 +25,35 @@ Everything needed to stop this work at any point and resume later with zero loss
 
 **Resume tested end-to-end (2026-11-07):** trainer killed mid-epoch-2 → watchdog relaunched it → log shows `RESUMING from ...last.pt` → training continued at epoch 2 without restarting.
 
+## Interim golden-split evals (never-trained golden, imgsz 640, conf sweep iou 0.45)
+
+Baseline (deployed nano): mAP50 0.361 | mAP50-95 0.115 | P 0.504 | R 0.349 | image recall 91%/85%/74% @ conf 0.15/0.25/0.35
+
+| Checkpoint | mAP50 | mAP50-95 | P | R | recall@0.15/0.25/0.35 |
+|---|---|---|---|---|---|
+| epoch-6 best.pt (2026-11-08) | 0.361 | 0.133 | 0.477 | 0.372 | 96% / 78% / 60% |
+| epoch-10/11 best.pt (2026-11-08) | 0.401 | 0.170 | 0.495 | 0.375 | 90% / 77% / 65% |
+
+FP on valid-split backgrounds (16 imgs, imgsz 640): nano 0/16 @0.25 (1/16 @0.10-0.20) vs
+v2 2/16 @0.25, 4/16 @0.20, 6/16 @0.15, 6/16 @0.10. v2 is better-calibrated (probability
+mass shifted to lower conf) -> NOT deployed at interim stage; deploy when operating-point
+recall AND precision clearly dominate, then retune conf (likely 0.15-0.20) with FP re-check.
+
+## Reliability lessons (2026-11-09)
+
+- **Keep the laptop PLUGGED IN while training runs.** Overnight holes (~11.5h) happened
+  twice because the machine was unplugged: battery drain -> critical-battery hibernate
+  overrides the keep-awake assertion; a second unplug event also killed processes.
+- System keep-awake (SetThreadExecutionState ES_SYSTEM_REQUIRED) is asserted by the
+  watchdog while training runs — it prevents idle sleep but NOT critical-battery
+  hibernate, and it is cleared as soon as training completes.
+- Watchdog runs detached AND as scheduled task 'PaveGuard-TrainWatchdog' (every 5 min,
+  battery-allowed, unlimited runtime, lockfile single-instance). If both die, relaunch
+  with the manual resume command below, or `schtasks /Run /TN PaveGuard-TrainWatchdog`.
+- Position: training resumed 2026-11-09 13:50 from epoch 12 (val mAP50 0.503); epoch 13 re-running.
+
+Deploy only when the operating-point numbers (recall @0.25 with acceptable precision) clearly beat baseline.
+
 ## How to resume (3 options)
 
 1. **Do nothing** — the watchdog (`train-watchdog.ps1`, launched detached) relaunches training automatically within ~5 min if the process dies, resuming from `last.pt`. It exits itself once training completes (`best.pt` final + `train()` returned).
