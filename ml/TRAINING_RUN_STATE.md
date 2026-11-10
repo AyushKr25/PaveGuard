@@ -50,7 +50,23 @@ recall AND precision clearly dominate, then retune conf (likely 0.15-0.20) with 
 - Watchdog runs detached AND as scheduled task 'PaveGuard-TrainWatchdog' (every 5 min,
   battery-allowed, unlimited runtime, lockfile single-instance). If both die, relaunch
   with the manual resume command below, or `schtasks /Run /TN PaveGuard-TrainWatchdog`.
-- Position: training resumed 2026-11-09 13:50 from epoch 12 (val mAP50 0.503); epoch 13 re-running.
+- Position: training was **stopped intentionally on 2026-11-10 22:41 at epoch 22** (val mAP50 0.639,
+  mAP50-95 0.303) at the user's request (watchdog task kept opening PowerShell windows).
+  `last.pt` = epoch 22 end; `best.pt` = epoch 22 (best val so far). The epoch-17 interim model
+  is deployed to the app; re-deploy epoch-22+ best.pt when resuming/finishing.
+- **TO RESUME LATER** (one command — wrapper auto-detects last.pt and continues from epoch 23):
+  ```powershell
+  cd "C:\Users\ayush\OneDrive\Desktop\AI Pothole Detection"
+  Start-Process -FilePath python -ArgumentList ('"{0}" --model yolo11m.pt --data "{1}\ml\datasets\pothole-expanded.yaml" --epochs 45 --batch 16 --workers 6 --cache none --save-period 2' -f "$PWD\ml\training\train_v2.py", $PWD) -WindowStyle Hidden
+  ```
+  Optionally also restore the auto-restart watchdog (it fires a PowerShell window every
+  5 min — that is what annoyed you; skip it unless you want unattended resilience):
+  ```powershell
+  $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NoProfile -ExecutionPolicy Bypass -File "C:\Users\ayush\AppData\Local\Temp\opencode\train-watchdog.ps1"'
+  $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes 5) -RepetitionDuration (New-TimeSpan -Days 3650)
+  $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit ([TimeSpan]::Zero) -MultipleInstances IgnoreNew -StartWhenAvailable
+  Register-ScheduledTask -TaskName 'PaveGuard-TrainWatchdog' -Action $action -Trigger $trigger -Settings $settings
+  ```
 
 Deploy only when the operating-point numbers (recall @0.25 with acceptable precision) clearly beat baseline.
 
